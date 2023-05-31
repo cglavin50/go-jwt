@@ -9,11 +9,13 @@ import (
 	"gorm.io/gorm"
 )
 
-var db *gorm.DB
+var DB *gorm.DB
 
-func InitDB(dsn string) *gorm.DB {
+func InitDB(dsn string) {
 	var err error
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	//db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	// url := `host=localhost user=jwtuser password=jwt db=jwt_db port=5432 sslmode=disable TimeZone='Pacific Standard Time'"
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Error connecting to the DB")
 	}
@@ -21,11 +23,10 @@ func InitDB(dsn string) *gorm.DB {
 	configureTable() // configure table to match our user model
 
 	fmt.Println("DB connection established")
-	return db
 }
 
 func configureTable() {
-	err := db.AutoMigrate(&models.User{})
+	err := DB.AutoMigrate(&models.User{})
 	if err != nil {
 		log.Fatal("Error formatting table to model", err)
 	}

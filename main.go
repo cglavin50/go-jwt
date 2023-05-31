@@ -1,8 +1,10 @@
 package main
 
 import (
+	"log"
 	"os"
 
+	"github.com/cglavin50/go-jwt/controllers"
 	"github.com/cglavin50/go-jwt/initializers"
 	"github.com/gofiber/fiber/v2"
 )
@@ -21,6 +23,8 @@ func main() {
 	app.Get("/ping", func(c *fiber.Ctx) error {
 		return c.SendString("pong!")
 	})
+	app.Post("/signup", controllers.SignUp) // validate syntax here (vs passing parameter to this func and handling error elsewhere)
+	// ^ handles post requests to create a new user, request: header: POST body: email, password (handles any type of encoding)
 
-	app.Listen(":3000")
+	log.Fatal(app.Listen(":3000")) //listening on localhost:3000
 }
