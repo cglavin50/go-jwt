@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"os"
+	"net/http"
 	"time"
 
 	"github.com/cglavin50/go-jwt/initializers"
@@ -12,9 +12,22 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// var key *ecdsa.PrivateKey
+
+// func FetchKey() {
+// 	var err error
+// 	ecdsa := os.Getenv("ECDSA_PRV")
+// 	fmt.Println("ecdsa:", ecdsa)
+// 	key, err = x509.ParseECPrivateKey([]byte(ecdsa))
+// 	if err != nil {
+// 		log.Fatal("Failed to parse ECDSA key")
+// 	}
+// }
+
 func SignUp(c *fiber.Ctx) error {
 	user := models.User{}
 	extractUser(c, &user)
+	fmt.Println("Creating user: ", user.Email)
 	result := initializers.DB.Create(&user) // create record (post) user following user model
 	if result.Error != nil {
 		c.Status(400).JSON(&fiber.Map{
@@ -25,8 +38,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	// if no fails, set status ok and return
 	c.Status(200).JSON(&fiber.Map{
-		"Status":   "OK",
-		"Password": user.Password,
+		"Status": "OK",
 	})
 	return nil
 }
@@ -52,33 +64,34 @@ func Login(c *fiber.Ctx) error {
 		return nil
 	}
 	// check reqUser vs User
-	// $2a$10$J/FMfxr22jKobnC4wkNtluGggdR1iwzn2QtS7.eM.qxtZKTwL0jUa"
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password)); err != nil { // check match of hashes, relying on strong collision resistance
-		bp, _ := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
 		c.Status(400).JSON(&fiber.Map{
-			"error":           "Incorrect credentials provided",
-			"hashed password": bp,
-			"user email":      user.Email,
-			"user password":   user.Password,
+			"error": "Incorrect credentials provided",
 		})
 		return nil
 	} // wrong-password case
 
 	// generate JWT
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"iss": "go-jwt-backend",
 		"exp": time.Now().Add(time.Hour).Unix(),
 		"sub": user.ID, // is this safe to publish?
 	})
-	fmt.Println(os.Getenv("ECDSA_PRV"))
-	tokenString, err := token.SignedString([]byte(os.Getenv("ECDSA_PRV")))
+
+	// update this to use an actual asymmetric key system
+	tokenString, err := token.SignedString([]byte("12i3bkajsckl23ekljncoa9sid"))
 	if err != nil {
 		c.Status(400).JSON(&fiber.Map{
 			"error": "Failed to create token",
 		}) // sends HTTP status 400, bad request
 		return nil
 	}
-	// send JWT
+	// send JWT as cookie
+	c.Cookie(&fiber.Cookie{
+		Name:    "Authorization",
+		Value:   tokenString,
+		Expires: time.Now().Add(time.Minute * 15),
+	})
 	c.Status(200).JSON(&fiber.Map{
 		"token": tokenString,
 	})
@@ -111,4 +124,16 @@ func extractUser(c *fiber.Ctx, user *models.User) {
 	// Populate User field
 	user.Email = body.Email
 	user.Password = string(hpw)
+}
+
+func Validate(c *fiber.Ctx) error {
+	fmt.Println("Printing in validate")
+	for key, value := range c.GetRespHeaders() {
+		fmt.Println(key, ":", value)
+	}
+	err := c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message": "logged in",
+		"user":    c.GetRespHeader("Id"),
+	})
+	return err
 }
