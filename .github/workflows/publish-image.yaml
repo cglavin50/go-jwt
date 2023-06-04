@@ -13,4 +13,5 @@ jobs:
           docker build . -t cglavin50/go-jwt:latest
       - name: publish
         run: |
+          docker login -u cglavin50 -p ${{secrets.DOCKER_TOKEN}}
           docker push cglavin50/go-jwt:latest

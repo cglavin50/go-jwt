@@ -21,4 +21,9 @@ JWT's can be a powerful tool, however require explicit and fine-tuned parameters
 
 ## Opaque (Phantom Tokens)
 
-https://curity.io/resources/learn/introspect-with-phantom-token/
+To avoid issues with expiration time or PII on JWTs, [phantom/opaque tokens](https://curity.io/resources/learn/phantom-token-pattern/) can be used instead. Essentially, there is a key/value store of personal (value) tokens/JWTs, and referential (key) tokens, allowing a separation of personal information from the client. The control flow is as follows:
+
+1. User sends login request. Middleware receives, and sends values to authentication service.
+2. Authentication service validates the information, and creates a JWT/Phantom token pair. The phantom token is then passed back to the middleware.
+3. Middleware sends phantom token to the user to use in future requests.
+4. Upon receiving a future request, middleware then uses the authentication service to perform a lookup, and then passes the JWT to backend services to handle the request.
