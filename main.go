@@ -13,7 +13,7 @@ import (
 func init() {
 	initializers.LoadEnvVariables()
 	initializers.InitDB(os.Getenv("DSN"))
-	// controllers.FetchKey()
+	controllers.FetchKey()
 } // called upon main instantiation
 
 func main() {

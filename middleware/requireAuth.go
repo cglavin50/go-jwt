@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cglavin50/go-jwt/controllers"
 	"github.com/cglavin50/go-jwt/initializers"
 	"github.com/cglavin50/go-jwt/models"
 	"github.com/gofiber/fiber/v2"
@@ -20,7 +21,7 @@ func RequireAuth(c *fiber.Ctx) error {
 	// decode/validate
 	claims := jwt.MapClaims{}
 	_, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("12i3bkajsckl23ekljncoa9sid"), nil
+		return controllers.Pub_key, nil
 	})
 	if err != nil {
 		return fiber.NewError(fiber.StatusUnauthorized, "Error, cookies could not be parsed")

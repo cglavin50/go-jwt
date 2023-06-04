@@ -1,8 +1,11 @@
 package controllers
 
 import (
+	"crypto/rsa"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/cglavin50/go-jwt/initializers"
@@ -12,17 +15,26 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// var key *ecdsa.PrivateKey
+var prv_key *rsa.PrivateKey
+var Pub_key *rsa.PublicKey
 
-// func FetchKey() {
-// 	var err error
-// 	ecdsa := os.Getenv("ECDSA_PRV")
-// 	fmt.Println("ecdsa:", ecdsa)
-// 	key, err = x509.ParseECPrivateKey([]byte(ecdsa))
-// 	if err != nil {
-// 		log.Fatal("Failed to parse ECDSA key")
-// 	}
-// }
+func FetchKey() {
+	var err error
+	prvKeyStr := os.Getenv("RSA_PRV")
+	pubKeyStr := os.Getenv("RSA_PUB")
+	fmt.Println("prvKeyStr:", prvKeyStr)
+	fmt.Println("pubKeyStr:", pubKeyStr)
+	prv_key, err = jwt.ParseRSAPrivateKeyFromPEM([]byte(prvKeyStr))
+	if err != nil {
+		log.Fatal("Failed to parse private key:", err)
+	}
+	fmt.Println("prv key:", prv_key)
+	Pub_key, err = jwt.ParseRSAPublicKeyFromPEM([]byte(pubKeyStr))
+	if err != nil {
+		log.Fatal("Failed to parse private key:", err)
+	}
+	fmt.Println("pub key:", prv_key)
+}
 
 func SignUp(c *fiber.Ctx) error {
 	user := models.User{}
@@ -72,14 +84,14 @@ func Login(c *fiber.Ctx) error {
 	} // wrong-password case
 
 	// generate JWT
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"iss": "go-jwt-backend",
 		"exp": time.Now().Add(time.Hour).Unix(),
 		"sub": user.ID, // is this safe to publish?
 	})
 
 	// update this to use an actual asymmetric key system
-	tokenString, err := token.SignedString([]byte("12i3bkajsckl23ekljncoa9sid"))
+	tokenString, err := token.SignedString(prv_key)
 	if err != nil {
 		c.Status(400).JSON(&fiber.Map{
 			"error": "Failed to create token",
