@@ -9,14 +9,15 @@ Learning about JSON Web Tokens and using them in Golang using Fiber, Gorm, Bcryp
 - locahost:3000/validate
   - Using the cookie provided from /login, will parse and return a response accepting or denying your login credentials to acecss private information
 
-## DB
+## Functionality
 
-- Using a Docker postgres image to run a basic DB
-- Starting with Docker compose to have this entire project be containerized and deployable
+Using Go to host the backend of a MPA, created endpoints that take in user information, store credentials in a postgres DB, then create and return JWT's as cookies for users to use to access client information. Deploymeny via docker, [repo here](https://hub.docker.com/r/cglavin50/go-jwt).
 
 ## Dangers of JWT (or tokens in general)
 
 Usable until they expire, meaning if someone gets access to them, they can easily impersonate you (so if you fall to a MitM attack or cross-site scripting, your information is not secure). In general, not great to use as a session token unless extra measures (including keeping a list of expired tokens) are taken. For example, do not put user emails on JWTs, as it is PII and can easily be mined via MitM (never store at rest).
+
+JWT's can be a powerful tool, however require explicit and fine-tuned parameters (such as sub (subject), and exp (experiation)) to avoid misuse. As they are public, no PII can be held on it, so make sure to use either other user ID's, or a system like opaque tokens to validate following API calls.
 
 ## Opaque (Phantom Tokens)
 
